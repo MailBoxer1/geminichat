@@ -8,6 +8,13 @@ const SELECTED_MODEL_STORAGE_KEY = 'gemini_chat_selected_model';
 // Доступные модели для чата
 export const availableModels: LLMModel[] = [
   {
+    id: 'openrouter/google/gemini-2.5-pro-exp-03-25:free',
+    name: 'Gemini 2.5 Pro (OpenRouter)',
+    description: 'Бесплатный доступ через OpenRouter',
+    provider: 'OpenRouter',
+    apiEndpoint: 'https://openrouter.ai/api/v1/chat/completions'
+  },
+  {
     id: 'gemini-2.0-flash-thinking-exp-01-21',
     name: 'Gemini 2.0 Flash Thinking',
     description: 'Экспериментальная модель из Google AI Studio',
@@ -62,6 +69,7 @@ const formatRequest = (model: string, messages: Message[]) => {
       };
     
     case 'OpenAI':
+    case 'Mistral':
       return {
         model: model,
         messages: messages.map(message => ({
@@ -80,9 +88,9 @@ const formatRequest = (model: string, messages: Message[]) => {
         max_tokens: 4096
       };
     
-    case 'Mistral':
+    case 'OpenRouter':
       return {
-        model: model,
+        model: model.replace('openrouter/', ''),  // Убираем префикс 'openrouter/'
         messages: messages.map(message => ({
           role: message.role,
           content: message.content
@@ -110,6 +118,8 @@ const processResponse = (model: string, response: any): MessageResponse => {
         };
       
       case 'OpenAI':
+      case 'Mistral':
+      case 'OpenRouter':
         return {
           content: response.data.choices[0].message.content
         };
@@ -117,11 +127,6 @@ const processResponse = (model: string, response: any): MessageResponse => {
       case 'Anthropic':
         return {
           content: response.data.content[0].text
-        };
-      
-      case 'Mistral':
-        return {
-          content: response.data.choices[0].message.content
         };
       
       default:
@@ -213,6 +218,20 @@ export const testApiKey = async (apiKey: string, modelId: string = availableMode
           'Authorization': `Bearer ${apiKey}`
         };
         break;
+        
+      case 'OpenRouter':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Gemini Chat'
+        };
+        break;
+    }
+    
+    // Для OpenRouter нужно ограничить максимальное количество токенов
+    if (modelInfo.provider === 'OpenRouter') {
+      testData.max_tokens = 50;
     }
     
     // Выполняем запрос к API, используя тот же endpoint, что и в чате
@@ -272,6 +291,15 @@ export const sendMessageToLLM = async (model: string, messages: Message[]): Prom
         headers = {
           ...headers,
           'Authorization': `Bearer ${apiKey}`
+        };
+        break;
+        
+      case 'OpenRouter':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Gemini Chat'
         };
         break;
     }

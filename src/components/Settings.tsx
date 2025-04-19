@@ -11,7 +11,8 @@ import {
   Button, 
   SelectChangeEvent, 
   Alert,
-  Snackbar
+  Snackbar,
+  Link
 } from '@mui/material';
 import { testApiKey } from '../services/api';
 import { LLMModel } from '../types/chat';
@@ -37,6 +38,8 @@ const Settings: React.FC<SettingsProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [testing, setTesting] = useState(false);
+  
+  const selectedModelInfo = availableModels.find(m => m.id === selectedModel);
 
   const handleModelChange = (event: SelectChangeEvent) => {
     setSelectedModel(event.target.value);
@@ -80,12 +83,91 @@ const Settings: React.FC<SettingsProps> = ({
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
+  
+  // Определяем, как получить API ключ в зависимости от провайдера
+  const getApiKeyInstructions = () => {
+    if (!selectedModelInfo) return null;
+    
+    switch (selectedModelInfo.provider) {
+      case 'Google':
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Получить API-ключ можно на <Link href="https://aistudio.google.com/" target="_blank">Google AI Studio</Link>.
+          </Typography>
+        );
+        
+      case 'OpenRouter':
+        return (
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Для использования OpenRouter API:
+            </Typography>
+            <ol style={{ margin: '8px 0', paddingLeft: '24px' }}>
+              <li>Перейдите на <Link href="https://openrouter.ai/" target="_blank">OpenRouter.ai</Link></li>
+              <li>Создайте аккаунт или войдите в существующий</li>
+              <li>Перейдите в настройки API и создайте ключ</li>
+              <li>Скопируйте ключ и вставьте его выше</li>
+            </ol>
+            <Typography variant="body2" color="text.secondary">
+              OpenRouter предоставляет бесплатный доступ к разным моделям, включая Gemini 2.5 Pro
+            </Typography>
+          </Box>
+        );
+        
+      case 'OpenAI':
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Получить API-ключ можно в <Link href="https://platform.openai.com/api-keys" target="_blank">личном кабинете OpenAI</Link>.
+          </Typography>
+        );
+        
+      case 'Anthropic':
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Получить API-ключ можно на <Link href="https://console.anthropic.com/" target="_blank">сайте Anthropic</Link>.
+          </Typography>
+        );
+        
+      case 'Mistral':
+        return (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+            Получить API-ключ можно на <Link href="https://console.mistral.ai/" target="_blank">сайте Mistral AI</Link>.
+          </Typography>
+        );
+        
+      default:
+        return null;
+    }
+  };
 
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" component="h2" gutterBottom>
         Настройки
       </Typography>
+      
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Модель</InputLabel>
+        <Select
+          value={selectedModel}
+          label="Модель"
+          onChange={handleModelChange}
+        >
+          {availableModels.map((model) => (
+            <MenuItem key={model.id} value={model.id}>
+              {model.name} - {model.description}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      
+      <Box sx={{ mt: 2, mb: 1 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          API-ключ {selectedModelInfo && `для ${selectedModelInfo.provider}`}
+        </Typography>
+        
+        {getApiKeyInstructions()}
+      </Box>
       
       <Box sx={{ mb: 3 }}>
         <TextField
@@ -97,7 +179,7 @@ const Settings: React.FC<SettingsProps> = ({
           margin="normal"
           variant="outlined"
           placeholder="Введите ваш API-ключ"
-          helperText="API-ключ для доступа к модели LLM"
+          helperText={selectedModelInfo ? `API-ключ для доступа к модели ${selectedModelInfo.name}` : 'API-ключ для доступа к модели'}
         />
         <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
           <Button 
@@ -117,21 +199,6 @@ const Settings: React.FC<SettingsProps> = ({
           </Button>
         </Box>
       </Box>
-      
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Модель</InputLabel>
-        <Select
-          value={selectedModel}
-          label="Модель"
-          onChange={handleModelChange}
-        >
-          {availableModels.map((model) => (
-            <MenuItem key={model.id} value={model.id}>
-              {model.name} - {model.description}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
 
       <Snackbar
         open={snackbarOpen}

@@ -13,7 +13,7 @@ export interface LLMModel {
   id: string;
   name: string;
   description: string;
-  provider: 'Google' | 'Anthropic' | 'OpenAI' | 'Mistral' | 'Other';
+  provider: 'Google' | 'Anthropic' | 'OpenAI' | 'Mistral' | 'OpenRouter' | 'Other';
   apiEndpoint?: string;
 }
 
