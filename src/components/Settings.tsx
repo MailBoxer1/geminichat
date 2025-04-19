@@ -36,6 +36,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [testStatus, setTestStatus] = useState<'success' | 'error' | 'idle'>('idle');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [testing, setTesting] = useState(false);
 
   const handleModelChange = (event: SelectChangeEvent) => {
     setSelectedModel(event.target.value);
@@ -52,8 +53,9 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleTestApiKey = async () => {
+    setTesting(true);
     try {
-      await testApiKey(tempApiKey);
+      await testApiKey(tempApiKey, selectedModel);
       setTestStatus('success');
       setSnackbarMessage('API-ключ работает корректно!');
       setSnackbarOpen(true);
@@ -70,6 +72,8 @@ const Settings: React.FC<SettingsProps> = ({
       setSnackbarMessage(errorMessage);
       setSnackbarOpen(true);
       console.error('Детальная ошибка при проверке API-ключа:', error);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -107,9 +111,9 @@ const Settings: React.FC<SettingsProps> = ({
           <Button 
             variant="outlined" 
             onClick={handleTestApiKey}
-            disabled={!tempApiKey}
+            disabled={!tempApiKey || testing}
           >
-            Проверить ключ
+            {testing ? 'Проверка...' : 'Проверить ключ'}
           </Button>
         </Box>
       </Box>

@@ -154,29 +154,69 @@ export const storeSelectedModel = (model: string): void => {
 };
 
 // Проверка API-ключа
-export const testApiKey = async (apiKey: string): Promise<boolean> => {
+export const testApiKey = async (apiKey: string, modelId: string = availableModels[0].id): Promise<boolean> => {
   try {
     if (!apiKey) {
       return Promise.reject(new Error('API-ключ не может быть пустым'));
     }
-
-    // Простой запрос для проверки API-ключа
-    const testEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-    const testData = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: 'Hello' }]
-        }
-      ]
-    };
     
-    const testHeaders = {
+    // Ищем информацию о модели
+    const modelInfo = availableModels.find(m => m.id === modelId);
+    if (!modelInfo) {
+      return Promise.reject(new Error(`Неизвестная модель: ${modelId}`));
+    }
+    
+    if (!modelInfo.apiEndpoint) {
+      return Promise.reject(new Error(`Не указан API-эндпоинт для модели: ${modelId}`));
+    }
+    
+    // Формируем тестовый запрос с той же логикой, что и при общении в чате
+    const testData = formatRequest(modelId, [
+      {
+        role: 'user',
+        content: 'Hello, this is a test message to verify API key',
+        timestamp: new Date().toISOString()
+      }
+    ]);
+    
+    let headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey
     };
     
-    await axios.post(testEndpoint, testData, { headers: testHeaders });
+    // Настраиваем заголовки согласно провайдеру
+    switch (modelInfo.provider) {
+      case 'Google':
+        headers = {
+          ...headers,
+          'x-goog-api-key': apiKey
+        };
+        break;
+      
+      case 'OpenAI':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`
+        };
+        break;
+      
+      case 'Anthropic':
+        headers = {
+          ...headers,
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        };
+        break;
+      
+      case 'Mistral':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`
+        };
+        break;
+    }
+    
+    // Выполняем запрос к API, используя тот же endpoint, что и в чате
+    await axios.post(modelInfo.apiEndpoint, testData, { headers });
     
     return Promise.resolve(true);
   } catch (error) {
