@@ -52,7 +52,7 @@ export const availableModels: LLMModel[] = [
 ];
 
 // Форматирование запроса в зависимости от модели
-const formatRequest = (model: string, messages: Message[]) => {
+const formatRequest = (model: string, messages: Message[], stream: boolean = false) => {
   const modelInfo = availableModels.find(m => m.id === model);
   
   if (!modelInfo) {
@@ -75,7 +75,8 @@ const formatRequest = (model: string, messages: Message[]) => {
         messages: messages.map(message => ({
           role: message.role,
           content: message.content
-        }))
+        })),
+        stream: stream
       };
     
     case 'Anthropic':
@@ -85,16 +86,21 @@ const formatRequest = (model: string, messages: Message[]) => {
           role: message.role,
           content: message.content
         })),
-        max_tokens: 4096
+        max_tokens: 4096,
+        stream: stream
       };
     
     case 'OpenRouter':
+      // Правильная обработка ID модели
+      const modelId = model.includes('openrouter/') ? model.replace('openrouter/', '') : model;
       return {
-        model: model.replace('openrouter/', ''),  // Убираем префикс 'openrouter/'
+        model: modelId,
         messages: messages.map(message => ({
           role: message.role,
           content: message.content
-        }))
+        })),
+        max_tokens: 1000, // Разумное значение по умолчанию
+        stream: stream
       };
     
     default:
@@ -186,6 +192,33 @@ export const storeSelectedModel = (model: string): void => {
   localStorage.setItem(SELECTED_MODEL_STORAGE_KEY, model);
 };
 
+// Обработка ошибок OpenRouter
+const handleOpenRouterError = (error: any): Error => {
+  if (!error.response) {
+    return new Error('Ошибка сети при подключении к OpenRouter');
+  }
+  
+  const status = error.response.status;
+  const data = error.response.data;
+  
+  switch (status) {
+    case 400:
+      return new Error(`Ошибка в запросе: ${data.error?.message || 'Неверный формат запроса'}`);
+    case 401:
+      return new Error('Неверный API-ключ для OpenRouter');
+    case 402:
+      return new Error('Недостаточно средств на счету OpenRouter');
+    case 429:
+      return new Error('Превышен лимит запросов к OpenRouter');
+    case 500:
+    case 502:
+    case 503:
+      return new Error('Сервис OpenRouter временно недоступен');
+    default:
+      return new Error(`Ошибка OpenRouter: ${data.error?.message || error.message || 'Неизвестная ошибка'}`);
+  }
+};
+
 // Проверка API-ключа
 export const testApiKey = async (apiKey: string, modelId: string = availableModels[0].id): Promise<boolean> => {
   try {
@@ -259,7 +292,7 @@ export const testApiKey = async (apiKey: string, modelId: string = availableMode
     
     // Для OpenRouter нужно ограничить максимальное количество токенов
     if (modelInfo.provider === 'OpenRouter') {
-      testData.max_tokens = 50;
+      testData.max_tokens = 150;
     }
     
     // Выполняем запрос к API, используя тот же endpoint, что и в чате
@@ -268,12 +301,20 @@ export const testApiKey = async (apiKey: string, modelId: string = availableMode
     return Promise.resolve(true);
   } catch (error) {
     console.error('Ошибка при проверке API-ключа:', error);
+    console.log(error);
+    
+    // Специальная обработка ошибок OpenRouter
+    const modelInfo = availableModels.find(m => m.id === modelId);
+    if (modelInfo?.provider === 'OpenRouter') {
+      return Promise.reject(handleOpenRouterError(error));
+    }
+    
     return Promise.reject(error);
   }
 };
 
 // Отправка сообщения в LLM
-export const sendMessageToLLM = async (model: string, messages: Message[]): Promise<MessageResponse> => {
+export const sendMessageToLLM = async (model: string, messages: Message[], stream: boolean = false): Promise<MessageResponse> => {
   const modelInfo = availableModels.find(m => m.id === model);
   if (!modelInfo || !modelInfo.apiEndpoint) {
     throw new Error(`Неизвестная модель или эндпоинт: ${model}`);
@@ -284,7 +325,7 @@ export const sendMessageToLLM = async (model: string, messages: Message[]): Prom
     throw new Error(`API-ключ не задан для провайдера ${modelInfo.provider}`);
   }
   
-  const requestData = formatRequest(model, messages);
+  const requestData = formatRequest(model, messages, stream);
   
   try {
     let headers: Record<string, string> = {
@@ -342,6 +383,163 @@ export const sendMessageToLLM = async (model: string, messages: Message[]): Prom
     return processResponse(model, response);
   } catch (error) {
     console.error('Ошибка при отправке запроса к API:', error);
+    
+    // Специальная обработка ошибок OpenRouter
+    if (modelInfo.provider === 'OpenRouter') {
+      throw handleOpenRouterError(error);
+    }
+    
+    throw error;
+  }
+};
+
+// Обработка потокового ответа от OpenRouter
+export const sendStreamingMessageToLLM = async (
+  model: string, 
+  messages: Message[], 
+  onChunk: (chunk: string) => void,
+  onComplete: (fullResponse: string) => void
+): Promise<void> => {
+  const modelInfo = availableModels.find(m => m.id === model);
+  if (!modelInfo || !modelInfo.apiEndpoint) {
+    throw new Error(`Неизвестная модель или эндпоинт: ${model}`);
+  }
+  
+  const apiKey = getStoredApiKey(model);
+  if (!apiKey) {
+    throw new Error(`API-ключ не задан для провайдера ${modelInfo.provider}`);
+  }
+  
+  // Подготовка запроса с потоковой передачей
+  const requestData = formatRequest(model, messages, true);
+  
+  try {
+    let headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Настройка заголовков в зависимости от провайдера
+    switch (modelInfo.provider) {
+      case 'Google':
+        headers = {
+          ...headers,
+          'x-goog-api-key': apiKey
+        };
+        break;
+      
+      case 'OpenAI':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`
+        };
+        break;
+      
+      case 'Anthropic':
+        headers = {
+          ...headers,
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        };
+        break;
+      
+      case 'Mistral':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`
+        };
+        break;
+        
+      case 'OpenRouter':
+        headers = {
+          ...headers,
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Gemini Chat'
+        };
+        break;
+    }
+    
+    // Выполняем потоковый запрос к API с использованием Axios и обработкой SSE
+    const response = await axios({
+      method: 'post',
+      url: modelInfo.apiEndpoint,
+      data: requestData,
+      headers: headers,
+      responseType: 'stream'
+    });
+    
+    let fullResponse = '';
+    
+    response.data.on('data', (chunk: Buffer) => {
+      const decodedChunk = chunk.toString();
+      
+      // Обработка данных в формате SSE (Server-Sent Events)
+      const lines = decodedChunk
+        .split('\n')
+        .filter(line => line.trim() !== '' && line.startsWith('data: '));
+        
+      for (const line of lines) {
+        const jsonData = line.substring(6); // Удаляем префикс 'data: '
+        
+        // Пропускаем [DONE] маркер
+        if (jsonData.trim() === '[DONE]') continue;
+        
+        try {
+          const parsedData = JSON.parse(jsonData);
+          
+          let chunkContent = '';
+          
+          // Извлекаем содержимое в зависимости от провайдера
+          switch (modelInfo.provider) {
+            case 'OpenAI':
+            case 'Mistral':
+            case 'OpenRouter':
+              if (parsedData.choices && parsedData.choices[0].delta && parsedData.choices[0].delta.content) {
+                chunkContent = parsedData.choices[0].delta.content;
+              }
+              break;
+              
+            case 'Anthropic':
+              if (parsedData.content && parsedData.content[0] && parsedData.content[0].text) {
+                chunkContent = parsedData.content[0].text;
+              }
+              break;
+              
+            case 'Google':
+              if (parsedData.candidates && parsedData.candidates[0] && 
+                  parsedData.candidates[0].content && parsedData.candidates[0].content.parts && 
+                  parsedData.candidates[0].content.parts[0] && parsedData.candidates[0].content.parts[0].text) {
+                chunkContent = parsedData.candidates[0].content.parts[0].text;
+              }
+              break;
+          }
+          
+          if (chunkContent) {
+            fullResponse += chunkContent;
+            onChunk(chunkContent);
+          }
+        } catch (e) {
+          console.error('Ошибка при обработке чанка:', e);
+        }
+      }
+    });
+    
+    response.data.on('end', () => {
+      onComplete(fullResponse);
+    });
+    
+    response.data.on('error', (err: Error) => {
+      throw err;
+    });
+    
+  } catch (error) {
+    console.error('Ошибка при отправке потокового запроса к API:', error);
+    
+    // Специальная обработка ошибок OpenRouter
+    if (modelInfo.provider === 'OpenRouter') {
+      throw handleOpenRouterError(error);
+    }
+    
     throw error;
   }
 }; 
