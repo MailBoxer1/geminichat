@@ -1,46 +1,61 @@
-# Getting Started with Create React App
+# Gemini Chat
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Одностраничное React-приложение для общения с различными моделями LLM (Large Language Models) через API.
 
-## Available Scripts
+## Возможности
 
-In the project directory, you can run:
+- Поддержка нескольких LLM моделей (Google Gemini, OpenAI, Anthropic Claude, Mistral AI)
+- Красивый и удобный интерфейс для ведения диалога с ИИ
+- Темная и светлая темы
+- Сохранение настроек API в локальном хранилище
+- Адаптивный дизайн (мобильная и десктопная версии)
 
-### `npm start`
+## Технологии
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React
+- TypeScript
+- Material-UI (MUI)
+- Axios для API-запросов
+- LocalStorage для сохранения настроек
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Как запустить
 
-### `npm test`
+### Необходимые требования
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 16+ 
+- npm или yarn
 
-### `npm run build`
+### Установка и запуск
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Клонируйте репозиторий:
+```
+git clone https://github.com/yourusername/geminichat.git
+cd geminichat
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Установите зависимости:
+```
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Запустите приложение:
+```
+npm start
+```
 
-### `npm run eject`
+4. Откройте браузер и перейдите по адресу [http://localhost:3000](http://localhost:3000)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Использование
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Нажмите на иконку настроек в верхнем правом углу.
+2. Введите ваш API-ключ для выбранной модели.
+3. Выберите модель из списка доступных.
+4. Начните общение с моделью через интерфейс чата.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Подключение реальных API
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+В текущей реализации ответы API симулируются. Для подключения реальных API-сервисов необходимо раскомментировать и настроить соответствующий код в файле `src/services/api.ts`.
 
-## Learn More
+## Лицензия
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+MIT

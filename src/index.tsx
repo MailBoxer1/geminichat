@@ -1,8 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+// Импортируем глобальные стили
+import './index.css';
+
+// Удаляем ненужные стили App.css
+import './App.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
