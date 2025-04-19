@@ -12,11 +12,15 @@ import {
   SelectChangeEvent, 
   Alert,
   Snackbar,
-  Link
+  Link,
+  IconButton,
+  InputAdornment
 } from '@mui/material';
 import { testApiKey } from '../services/api';
 import { LLMModel } from '../types/chat';
 import axios from 'axios';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 interface SettingsProps {
   apiKey: string;
@@ -38,6 +42,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [testing, setTesting] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   
   const selectedModelInfo = availableModels.find(m => m.id === selectedModel);
 
@@ -82,6 +87,10 @@ const Settings: React.FC<SettingsProps> = ({
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+  
+  const toggleShowApiKey = () => {
+    setShowApiKey(!showApiKey);
   };
   
   // Определяем, как получить API ключ в зависимости от провайдера
@@ -172,7 +181,7 @@ const Settings: React.FC<SettingsProps> = ({
       <Box sx={{ mb: 3 }}>
         <TextField
           label="API-ключ"
-          type="password"
+          type={showApiKey ? "text" : "password"}
           fullWidth
           value={tempApiKey}
           onChange={handleApiKeyChange}
@@ -180,6 +189,15 @@ const Settings: React.FC<SettingsProps> = ({
           variant="outlined"
           placeholder="Введите ваш API-ключ"
           helperText={selectedModelInfo ? `API-ключ для доступа к модели ${selectedModelInfo.name}` : 'API-ключ для доступа к модели'}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={toggleShowApiKey}>
+                  {showApiKey ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
         <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
           <Button 

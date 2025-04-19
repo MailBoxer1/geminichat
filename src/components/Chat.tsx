@@ -8,12 +8,15 @@ import {
   Avatar, 
   CircularProgress,
   Container,
-  IconButton
+  IconButton,
+  Chip,
+  Tooltip
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Message } from '../types/chat';
-import { sendMessageToLLM } from '../services/api';
+import { sendMessageToLLM, availableModels } from '../services/api';
 
 interface ChatProps {
   modelId: string;
@@ -24,6 +27,22 @@ const Chat: React.FC<ChatProps> = ({ modelId }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Получаем информацию о выбранной модели
+  const modelInfo = availableModels.find(m => m.id === modelId);
+  const modelName = modelInfo?.name || modelId;
+  const modelProvider = modelInfo?.provider || '';
+  
+  const getProviderColor = (provider: string) => {
+    switch(provider) {
+      case 'Google': return '#4285F4';
+      case 'OpenAI': return '#10a37f';
+      case 'Anthropic': return '#d25f8f';
+      case 'Mistral': return '#5d45e8';
+      case 'OpenRouter': return '#ff5a1f';
+      default: return '#757575';
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,12 +98,39 @@ const Chat: React.FC<ChatProps> = ({ modelId }) => {
   return (
     <Container maxWidth="md" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" component="h1">
-          Чат с {modelId}
-        </Typography>
-        <IconButton onClick={handleClearChat} color="error" title="Очистить чат">
-          <DeleteIcon />
-        </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <SmartToyIcon 
+            sx={{ 
+              mr: 1.5, 
+              color: getProviderColor(modelProvider),
+              fontSize: 28
+            }} 
+          />
+          <Box>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 500, lineHeight: 1.2 }}>
+              Чат с AI ассистентом
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+              <Tooltip title={`Провайдер: ${modelProvider}`}>
+                <Chip 
+                  label={modelName} 
+                  size="small" 
+                  sx={{ 
+                    bgcolor: getProviderColor(modelProvider) + '20',
+                    color: getProviderColor(modelProvider),
+                    fontWeight: 500,
+                    borderRadius: 1
+                  }}
+                />
+              </Tooltip>
+            </Box>
+          </Box>
+        </Box>
+        <Tooltip title="Очистить чат">
+          <IconButton onClick={handleClearChat} color="error">
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
       
       <Paper 

@@ -18,7 +18,7 @@ import {
 } from './services/api';
 
 const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [apiKey, setApiKey] = useState<string>(getStoredApiKey());
   const [selectedModel, setSelectedModel] = useState<string>(getStoredSelectedModel());
@@ -51,57 +51,18 @@ const App: React.FC = () => {
     palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
-        // Google Blue
-        main: '#4285F4',
+        main: '#2196f3',
       },
       secondary: {
-        // Google Red
-        main: '#EA4335',
+        main: '#f50057',
       },
       background: {
-        default: darkMode ? '#202124' : '#f8f9fa',
-        paper: darkMode ? '#303134' : '#ffffff',
+        default: darkMode ? '#121212' : '#f5f5f5',
+        paper: darkMode ? '#1e1e1e' : '#ffffff',
       },
-      error: {
-        // Google Red
-        main: '#EA4335'
-      },
-      warning: {
-        // Google Yellow
-        main: '#FBBC05'
-      },
-      success: {
-        // Google Green
-        main: '#34A853'
-      },
-      info: {
-        // Google Blue
-        main: '#4285F4'
-      }
     },
     typography: {
-      fontFamily: '"Google Sans", "Roboto", "Helvetica", "Arial", sans-serif',
-      h1: {
-        fontWeight: 500,
-      },
-      h2: {
-        fontWeight: 500,
-      },
-      h3: {
-        fontWeight: 500,
-      },
-      h4: {
-        fontWeight: 500,
-      },
-      h5: {
-        fontWeight: 500,
-      },
-      h6: {
-        fontWeight: 500,
-      },
-    },
-    shape: {
-      borderRadius: 8,
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     },
     components: {
       MuiCssBaseline: {
@@ -112,27 +73,12 @@ const App: React.FC = () => {
               width: '0.4em',
             },
             '&::-webkit-scrollbar-track': {
-              background: darkMode ? '#202124' : '#f8f9fa',
+              background: darkMode ? '#121212' : '#f5f5f5',
             },
             '&::-webkit-scrollbar-thumb': {
-              backgroundColor: darkMode ? '#5f6368' : '#dadce0',
+              backgroundColor: darkMode ? '#494949' : '#c1c1c1',
               borderRadius: 6,
             },
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
-            fontWeight: 500,
-          },
-        },
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
           },
         },
       },
