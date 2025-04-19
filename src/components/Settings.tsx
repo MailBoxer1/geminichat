@@ -28,6 +28,7 @@ interface SettingsProps {
   selectedModel: string;
   setSelectedModel: (model: string) => void;
   availableModels: LLMModel[];
+  onClose?: () => void; // Добавляем onClose
 }
 
 const Settings: React.FC<SettingsProps> = ({ 
@@ -35,7 +36,8 @@ const Settings: React.FC<SettingsProps> = ({
   setApiKey, 
   selectedModel, 
   setSelectedModel,
-  availableModels
+  availableModels,
+  onClose // Получаем onClose
 }) => {
   const [tempApiKey, setTempApiKey] = useState('');
   const [testStatus, setTestStatus] = useState<'success' | 'error' | 'idle'>('idle');
@@ -158,7 +160,17 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+    <Paper elevation={3} sx={{ p: 3, mb: 3, position: 'relative' }}>
+      {/* Кнопка закрытия */}
+      {onClose && (
+        <IconButton
+          aria-label="Закрыть настройки"
+          onClick={onClose}
+          sx={{ position: 'absolute', top: 8, right: 8 }}
+        >
+          <span style={{fontSize: 22, fontWeight: 'bold'}}>&times;</span>
+        </IconButton>
+      )}
       <Typography variant="h6" component="h2" gutterBottom>
         Настройки
       </Typography>
@@ -244,4 +256,4 @@ const Settings: React.FC<SettingsProps> = ({
   );
 };
 
-export default Settings; 
+export default Settings;

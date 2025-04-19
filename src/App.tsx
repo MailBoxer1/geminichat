@@ -129,6 +129,7 @@ const App: React.FC = () => {
               selectedModel={selectedModel}
               setSelectedModel={handleModelChange}
               availableModels={availableModels}
+              onClose={toggleSettings} // Передаем функцию закрытия
             />
           )}
           
