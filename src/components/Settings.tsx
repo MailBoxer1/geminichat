@@ -16,7 +16,7 @@ import {
   IconButton,
   InputAdornment
 } from '@mui/material';
-import { testApiKey, getStoredApiKeyForModel } from '../services/api';
+import { testApiKey, getStoredApiKey } from '../services/api';
 import { LLMModel } from '../types/chat';
 import axios from 'axios';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -24,7 +24,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 interface SettingsProps {
   apiKey: string;
-  setApiKey: (key: string, modelId?: string) => void;
+  setApiKey: (key: string, modelId: string) => void;
   selectedModel: string;
   setSelectedModel: (model: string) => void;
   availableModels: LLMModel[];
@@ -37,7 +37,7 @@ const Settings: React.FC<SettingsProps> = ({
   setSelectedModel,
   availableModels
 }) => {
-  const [tempApiKey, setTempApiKey] = useState(apiKey);
+  const [tempApiKey, setTempApiKey] = useState('');
   const [testStatus, setTestStatus] = useState<'success' | 'error' | 'idle'>('idle');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -46,13 +46,13 @@ const Settings: React.FC<SettingsProps> = ({
   
   const selectedModelInfo = availableModels.find(m => m.id === selectedModel);
 
-  // При изменении выбранной модели, загружаем соответствующий API-ключ
+  // Загружаем соответствующий API-ключ при изменении модели
   useEffect(() => {
-    if (selectedModelInfo) {
-      const apiKey = getStoredApiKeyForModel(selectedModel);
-      setTempApiKey(apiKey);
+    if (selectedModel) {
+      const modelApiKey = getStoredApiKey(selectedModel);
+      setTempApiKey(modelApiKey);
     }
-  }, [selectedModel, selectedModelInfo]);
+  }, [selectedModel]);
 
   const handleModelChange = (event: SelectChangeEvent) => {
     setSelectedModel(event.target.value);
@@ -63,9 +63,8 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleSaveApiKey = () => {
-    // Сохраняем ключ для конкретной модели
     setApiKey(tempApiKey, selectedModel);
-    setSnackbarMessage('API-ключ сохранен!');
+    setSnackbarMessage(`API-ключ сохранен для ${selectedModelInfo?.provider || 'модели'}!`);
     setSnackbarOpen(true);
   };
 
@@ -197,7 +196,7 @@ const Settings: React.FC<SettingsProps> = ({
           margin="normal"
           variant="outlined"
           placeholder="Введите ваш API-ключ"
-          helperText={selectedModelInfo ? `API-ключ для доступа к модели ${selectedModelInfo.name}` : 'API-ключ для доступа к модели'}
+          helperText={selectedModelInfo ? `API-ключ для доступа к моделям от ${selectedModelInfo.provider}` : 'API-ключ для доступа к модели'}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">

@@ -11,8 +11,7 @@ import Header from './components/Header';
 import Settings from './components/Settings';
 import { 
   getStoredApiKey, 
-  storeApiKey,
-  storeApiKeyForModel,
+  storeApiKey, 
   getStoredSelectedModel, 
   storeSelectedModel,
   availableModels
@@ -21,11 +20,20 @@ import {
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-  const [apiKey, setApiKey] = useState<string>(getStoredApiKey());
+  const [apiKey, setApiKey] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>(getStoredSelectedModel());
+
+  // При первой загрузке получаем ключ для текущей модели
+  useEffect(() => {
+    const key = getStoredApiKey(selectedModel);
+    setApiKey(key);
+  }, []);
 
   useEffect(() => {
     storeSelectedModel(selectedModel);
+    // При изменении модели загружаем соответствующий ключ
+    const key = getStoredApiKey(selectedModel);
+    setApiKey(key);
   }, [selectedModel]);
 
   const toggleDarkMode = () => {
@@ -36,12 +44,10 @@ const App: React.FC = () => {
     setSettingsOpen(!settingsOpen);
   };
 
-  const handleApiKeyChange = (key: string, modelId?: string) => {
-    setApiKey(key);
-    if (modelId) {
-      storeApiKeyForModel(modelId, key);
-    } else {
-      storeApiKey(key);
+  const handleApiKeyChange = (key: string, modelId: string) => {
+    storeApiKey(key, modelId);
+    if (modelId === selectedModel) {
+      setApiKey(key);
     }
   };
 

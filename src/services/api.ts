@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Message, MessageResponse, LLMModel } from '../types/chat';
 
-// Локальное хранение ключей API для разных провайдеров
+// Локальное хранение ключей API
 const API_KEYS_STORAGE_KEY = 'gemini_chat_api_keys';
 const SELECTED_MODEL_STORAGE_KEY = 'gemini_chat_selected_model';
 
@@ -138,65 +138,42 @@ const processResponse = (model: string, response: any): MessageResponse => {
   }
 };
 
+// Интерфейс для хранения API-ключей
+interface ApiKeysStorage {
+  [provider: string]: string;
+}
+
 // Получение всех сохраненных API-ключей
-export const getStoredApiKeys = (): Record<string, string> => {
-  const keysStr = localStorage.getItem(API_KEYS_STORAGE_KEY);
-  if (!keysStr) return {};
-  
-  try {
-    return JSON.parse(keysStr);
-  } catch (error) {
-    console.error('Ошибка при чтении API ключей:', error);
-    return {};
-  }
+export const getAllStoredApiKeys = (): ApiKeysStorage => {
+  const keysJson = localStorage.getItem(API_KEYS_STORAGE_KEY);
+  return keysJson ? JSON.parse(keysJson) : {};
 };
 
 // Получение API-ключа для конкретного провайдера
-export const getStoredApiKeyForProvider = (provider: string): string => {
-  const keys = getStoredApiKeys();
-  return keys[provider] || '';
-};
-
-// Получение API-ключа для конкретной модели
 export const getStoredApiKey = (modelId?: string): string => {
+  const allKeys = getAllStoredApiKeys();
+  
   if (!modelId) {
-    // Совместимость со старым кодом
-    return getStoredApiKeyForModel(getStoredSelectedModel());
+    // Поддержка обратной совместимости - возвращаем первый найденный ключ
+    const firstKey = Object.values(allKeys)[0];
+    return firstKey || '';
   }
-  return getStoredApiKeyForModel(modelId);
-};
-
-// Получение API-ключа для конкретной модели
-export const getStoredApiKeyForModel = (modelId: string): string => {
+  
   const modelInfo = availableModels.find(m => m.id === modelId);
   if (!modelInfo) return '';
   
-  return getStoredApiKeyForProvider(modelInfo.provider);
+  return allKeys[modelInfo.provider] || '';
 };
 
 // Сохранение API-ключа для конкретного провайдера
-export const storeApiKeyForProvider = (provider: string, apiKey: string): void => {
-  const keys = getStoredApiKeys();
-  keys[provider] = apiKey;
-  localStorage.setItem(API_KEYS_STORAGE_KEY, JSON.stringify(keys));
-};
-
-// Сохранение API-ключа (для совместимости)
-export const storeApiKey = (apiKey: string, modelId?: string): void => {
-  if (!modelId) {
-    // Совместимость со старым кодом - сохраняем для текущей выбранной модели
-    storeApiKeyForModel(getStoredSelectedModel(), apiKey);
-    return;
-  }
-  storeApiKeyForModel(modelId, apiKey);
-};
-
-// Сохранение API-ключа для конкретной модели
-export const storeApiKeyForModel = (modelId: string, apiKey: string): void => {
+export const storeApiKey = (apiKey: string, modelId: string): void => {
   const modelInfo = availableModels.find(m => m.id === modelId);
   if (!modelInfo) return;
   
-  storeApiKeyForProvider(modelInfo.provider, apiKey);
+  const allKeys = getAllStoredApiKeys();
+  allKeys[modelInfo.provider] = apiKey;
+  
+  localStorage.setItem(API_KEYS_STORAGE_KEY, JSON.stringify(allKeys));
 };
 
 // Получение выбранной модели из локального хранилища
@@ -297,14 +274,14 @@ export const testApiKey = async (apiKey: string, modelId: string = availableMode
 
 // Отправка сообщения в LLM
 export const sendMessageToLLM = async (model: string, messages: Message[]): Promise<MessageResponse> => {
-  const apiKey = getStoredApiKeyForModel(model);
-  if (!apiKey) {
-    throw new Error('API-ключ не задан для этой модели');
-  }
-  
   const modelInfo = availableModels.find(m => m.id === model);
   if (!modelInfo || !modelInfo.apiEndpoint) {
     throw new Error(`Неизвестная модель или эндпоинт: ${model}`);
+  }
+  
+  const apiKey = getStoredApiKey(model);
+  if (!apiKey) {
+    throw new Error(`API-ключ не задан для провайдера ${modelInfo.provider}`);
   }
   
   const requestData = formatRequest(model, messages);
