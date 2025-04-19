@@ -235,6 +235,16 @@ const Settings: React.FC<SettingsProps> = ({
           >
             {testing ? 'Проверка...' : 'Проверить ключ'}
           </Button>
+          {onClose && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onClose}
+              sx={{ border: '1px solid #bdbdbd', color: '#616161' }}
+            >
+              Закрыть окно
+            </Button>
+          )}
         </Box>
       </Box>
 
