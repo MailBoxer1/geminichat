@@ -18,7 +18,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import ChatIcon from '@mui/icons-material/Chat';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 interface HeaderProps {
   toggleSettings: () => void;
@@ -44,8 +44,8 @@ const Header: React.FC<HeaderProps> = ({
   const headerContent = (
     <>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <ChatIcon sx={{ mr: 1 }} />
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <SmartToyIcon sx={{ mr: 1.5, color: '#4285F4' }} />
+        <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
           Gemini Chat
         </Typography>
       </Box>
@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({
           <IconButton 
             color="inherit"
             component="a"
-            href="https://github.com/yourusername/geminichat"
+            href="https://github.com/MailBoxer1/geminichat"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -89,7 +89,14 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <AppBar position="static" sx={{ mb: 2 }}>
+      <AppBar position="static" 
+        sx={{ 
+          mb: 2, 
+          bgcolor: darkMode ? '#303134' : '#ffffff',
+          color: darkMode ? '#e8eaed' : '#202124',
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)'
+        }}
+      >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {isMobile ? (
             <>
@@ -103,7 +110,7 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <MenuIcon />
               </IconButton>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 500 }}>
                 Gemini Chat
               </Typography>
               <IconButton color="inherit" onClick={toggleSettings}>
@@ -126,9 +133,12 @@ const Header: React.FC<HeaderProps> = ({
           role="presentation"
           onClick={toggleDrawer}
         >
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Меню
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <SmartToyIcon sx={{ mr: 1.5, color: '#4285F4' }} />
+            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              Gemini Chat
+            </Typography>
+          </Box>
           
           <FormControlLabel
             control={
@@ -154,13 +164,24 @@ const Header: React.FC<HeaderProps> = ({
           <Button 
             startIcon={<GitHubIcon />}
             component="a"
-            href="https://github.com/yourusername/geminichat"
+            href="https://github.com/MailBoxer1/geminichat"
             target="_blank"
             rel="noopener noreferrer"
             fullWidth
             sx={{ mt: 1, justifyContent: 'flex-start' }}
           >
             GitHub
+          </Button>
+          
+          <Button 
+            component="a"
+            href="https://aistudio.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            fullWidth
+            sx={{ mt: 2, justifyContent: 'flex-start' }}
+          >
+            Google AI Studio
           </Button>
         </Box>
       </Drawer>

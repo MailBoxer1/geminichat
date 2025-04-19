@@ -51,18 +51,57 @@ const App: React.FC = () => {
     palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
-        main: '#2196f3',
+        // Google Blue
+        main: '#4285F4',
       },
       secondary: {
-        main: '#f50057',
+        // Google Red
+        main: '#EA4335',
       },
       background: {
-        default: darkMode ? '#121212' : '#f5f5f5',
-        paper: darkMode ? '#1e1e1e' : '#ffffff',
+        default: darkMode ? '#202124' : '#f8f9fa',
+        paper: darkMode ? '#303134' : '#ffffff',
       },
+      error: {
+        // Google Red
+        main: '#EA4335'
+      },
+      warning: {
+        // Google Yellow
+        main: '#FBBC05'
+      },
+      success: {
+        // Google Green
+        main: '#34A853'
+      },
+      info: {
+        // Google Blue
+        main: '#4285F4'
+      }
     },
     typography: {
-      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Google Sans", "Roboto", "Helvetica", "Arial", sans-serif',
+      h1: {
+        fontWeight: 500,
+      },
+      h2: {
+        fontWeight: 500,
+      },
+      h3: {
+        fontWeight: 500,
+      },
+      h4: {
+        fontWeight: 500,
+      },
+      h5: {
+        fontWeight: 500,
+      },
+      h6: {
+        fontWeight: 500,
+      },
+    },
+    shape: {
+      borderRadius: 8,
     },
     components: {
       MuiCssBaseline: {
@@ -73,12 +112,27 @@ const App: React.FC = () => {
               width: '0.4em',
             },
             '&::-webkit-scrollbar-track': {
-              background: darkMode ? '#121212' : '#f5f5f5',
+              background: darkMode ? '#202124' : '#f8f9fa',
             },
             '&::-webkit-scrollbar-thumb': {
-              backgroundColor: darkMode ? '#494949' : '#c1c1c1',
+              backgroundColor: darkMode ? '#5f6368' : '#dadce0',
               borderRadius: 6,
             },
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
           },
         },
       },

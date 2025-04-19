@@ -8,6 +8,13 @@ const SELECTED_MODEL_STORAGE_KEY = 'gemini_chat_selected_model';
 // Доступные модели для чата
 export const availableModels: LLMModel[] = [
   {
+    id: 'gemini-2.0-flash-thinking-exp-01-21',
+    name: 'Gemini 2.0 Flash Thinking',
+    description: 'Экспериментальная модель из Google AI Studio',
+    provider: 'Google',
+    apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent'
+  },
+  {
     id: 'gemini-pro',
     name: 'Gemini Pro',
     description: 'Продвинутая модель от Google',
@@ -47,6 +54,7 @@ const formatRequest = (model: string, messages: Message[]) => {
   
   switch (modelInfo.provider) {
     case 'Google':
+      // Для Gemini 2.0 и других моделей Google формат одинаковый
       return {
         contents: messages.map(message => ({
           role: message.role,
@@ -149,8 +157,30 @@ export const storeSelectedModel = (model: string): void => {
 // Проверка API-ключа
 export const testApiKey = async (apiKey: string): Promise<boolean> => {
   try {
-    // Для простоты, просто вернем true, в реальном приложении здесь был бы реальный запрос
-    return Promise.resolve(true);
+    // Для проверки API-ключа Google AI Studio можно сделать тестовый запрос
+    if (apiKey) {
+      const testEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent';
+      const testData = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: 'Hello' }]
+          }
+        ]
+      };
+      
+      const testHeaders = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      };
+      
+      // Раскомментируйте следующую строку для реальной проверки
+      // await axios.post(testEndpoint, testData, { headers: testHeaders });
+      
+      // Для демонстрационных целей просто возвращаем true
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
   } catch (error) {
     console.error('Ошибка при проверке API-ключа:', error);
     return Promise.reject(error);
@@ -208,10 +238,12 @@ export const sendMessageToLLM = async (model: string, messages: Message[]): Prom
         break;
     }
     
-    // Для демонстрационных целей, мы симулируем ответ
-    // В реальном приложении здесь был бы реальный запрос к API
-    
-    // const response = await axios.post(modelInfo.apiEndpoint, requestData, { headers });
+    // ДЛЯ ВКЛЮЧЕНИЯ РЕАЛЬНОГО API, РАСКОММЕНТИРУЙТЕ СЛЕДУЮЩИЙ КОД:
+    // const response = await axios.post(
+    //   modelInfo.apiEndpoint, 
+    //   requestData, 
+    //   { headers }
+    // );
     // return processResponse(model, response);
     
     // Симуляция задержки запроса
@@ -225,7 +257,7 @@ export const sendMessageToLLM = async (model: string, messages: Message[]): Prom
             content: {
               parts: [
                 {
-                  text: `Это симулированный ответ от модели ${modelInfo.name} (${modelInfo.provider}).\n\nВы можете подключить реальный API, изменив соответствующий код в файле src/services/api.ts.\n\nДля работы с реальным API вам потребуется действительный API-ключ от соответствующего провайдера.`
+                  text: `Это симулированный ответ от модели ${modelInfo.name} (${modelInfo.provider}).\n\nЕсли вы хотите использовать реальный API Google AI Studio, вам нужно:\n\n1. Получить API-ключ от Google AI Studio (https://aistudio.google.com/)\n2. Ввести его в настройках приложения\n3. Раскомментировать код для выполнения реальных запросов в файле src/services/api.ts\n\nМодель gemini-2.0-flash-thinking-exp-01-21 - это экспериментальная модель с быстрыми ответами.`
                 }
               ]
             }
