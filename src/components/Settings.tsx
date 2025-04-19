@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Paper, 
@@ -16,7 +16,7 @@ import {
   IconButton,
   InputAdornment
 } from '@mui/material';
-import { testApiKey } from '../services/api';
+import { testApiKey, getStoredApiKeyForModel } from '../services/api';
 import { LLMModel } from '../types/chat';
 import axios from 'axios';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -24,7 +24,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 interface SettingsProps {
   apiKey: string;
-  setApiKey: (key: string) => void;
+  setApiKey: (key: string, modelId?: string) => void;
   selectedModel: string;
   setSelectedModel: (model: string) => void;
   availableModels: LLMModel[];
@@ -46,6 +46,14 @@ const Settings: React.FC<SettingsProps> = ({
   
   const selectedModelInfo = availableModels.find(m => m.id === selectedModel);
 
+  // При изменении выбранной модели, загружаем соответствующий API-ключ
+  useEffect(() => {
+    if (selectedModelInfo) {
+      const apiKey = getStoredApiKeyForModel(selectedModel);
+      setTempApiKey(apiKey);
+    }
+  }, [selectedModel, selectedModelInfo]);
+
   const handleModelChange = (event: SelectChangeEvent) => {
     setSelectedModel(event.target.value);
   };
@@ -55,7 +63,8 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleSaveApiKey = () => {
-    setApiKey(tempApiKey);
+    // Сохраняем ключ для конкретной модели
+    setApiKey(tempApiKey, selectedModel);
     setSnackbarMessage('API-ключ сохранен!');
     setSnackbarOpen(true);
   };

@@ -11,7 +11,8 @@ import Header from './components/Header';
 import Settings from './components/Settings';
 import { 
   getStoredApiKey, 
-  storeApiKey, 
+  storeApiKey,
+  storeApiKeyForModel,
   getStoredSelectedModel, 
   storeSelectedModel,
   availableModels
@@ -22,10 +23,6 @@ const App: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [apiKey, setApiKey] = useState<string>(getStoredApiKey());
   const [selectedModel, setSelectedModel] = useState<string>(getStoredSelectedModel());
-
-  useEffect(() => {
-    storeApiKey(apiKey);
-  }, [apiKey]);
 
   useEffect(() => {
     storeSelectedModel(selectedModel);
@@ -39,8 +36,13 @@ const App: React.FC = () => {
     setSettingsOpen(!settingsOpen);
   };
 
-  const handleApiKeyChange = (key: string) => {
+  const handleApiKeyChange = (key: string, modelId?: string) => {
     setApiKey(key);
+    if (modelId) {
+      storeApiKeyForModel(modelId, key);
+    } else {
+      storeApiKey(key);
+    }
   };
 
   const handleModelChange = (model: string) => {
